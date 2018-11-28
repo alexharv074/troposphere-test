@@ -1,0 +1,4 @@
+---
+policydir: ./policy.d
+logfile: ./log/jerakia.log
+loglevel: info
