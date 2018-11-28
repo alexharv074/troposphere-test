@@ -27,10 +27,16 @@ pip install -r requirements.txt
 Run the ec2_instance.py script:
 
 ```text
-python ec2_instance.py
+python ec2_instance.py > ec2.json
 ```
 
 This writes out a Cloudformation JSON file.
+
+## Create stack
+
+```text
+aws cloudformation create-stack --template-body file://ec2.json
+```
 
 # Known issues
 
