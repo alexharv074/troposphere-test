@@ -1,16 +1,36 @@
-# Jerakia example
+# Troposphere + Jerakia example
 
-This repo contains an example of the simplest [Jerakia](http://jerakia.io) set up in a bundle-based installation.
+This repo contains a proof of concept [Troposphere](https://github.com/cloudtools/troposphere) with [Jerakia](http://jerakia.io) as an external Hiera-like data store.
 
 # Usage
 
-Clone this repo.
+Clone this repo. Cd into it.
+
+## Test Jerakia
 
 ```text
 $ bundle install
 $ JERAKIA_CONFIG=./jerakia.yaml bundle exec jerakia lookup foo
 bar
 ```
+
+## Test Troposphere
+
+Set up a virtualenv:
+
+```text
+virtualenv ./virtualenv
+source ./virtualenv/bin/activate
+pip install -r requirements.txt
+```
+
+Run the ec2_instance.py script:
+
+```text
+python ec2_instance.py
+```
+
+This writes out a Cloudformation JSON file.
 
 # Known issues
 
