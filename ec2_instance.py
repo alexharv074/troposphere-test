@@ -16,41 +16,35 @@ class Jerakia:
         json_string = check_output(command, shell=True)
         return json.loads(json_string)
 
-class Troposphere:
+class Ec2Instance:
     def __init__(self):
-        pass
+        jerakia = Jerakia()
+        self.Mapping      = jerakia.lookup("Mapping")
+        self.InstanceType = jerakia.lookup("InstanceType")
 
     def write(self):
         template = Template()
-        jerakia  = Jerakia()
 
-        keyname_param = template.add_parameter(Parameter(
-            "KeyName",
-            Description="Name of an existing EC2 KeyPair to enable SSH "
-                        "access to the instance",
-            Type="String",
+        keyname_param = template.add_parameter(Parameter("KeyName",
+            Description = "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            Type        = "String",
         ))
 
-        template.add_mapping('RegionMap', jerakia.lookup("Mapping"))
+        template.add_mapping("RegionMap", self.Mapping)
 
-        ec2_instance = template.add_resource(ec2.Instance(
-            "Ec2Instance",
-            ImageId=FindInMap("RegionMap", Ref("AWS::Region"), "AMI"),
-            InstanceType=jerakia.lookup("InstanceType"),
-            KeyName=Ref(keyname_param),
-            SecurityGroups=["default"],
-            UserData=Base64("80")
+        ec2_instance = template.add_resource(ec2.Instance("Ec2Instance",
+            ImageId        = FindInMap("RegionMap", Ref("AWS::Region"), "AMI"),
+            InstanceType   = self.InstanceType,
+            KeyName        = Ref(keyname_param),
+            SecurityGroups = ["default"],
+            UserData       = Base64("80"),
         ))
 
-        template.add_output([
-            Output(
-                "InstanceId",
-                Description="InstanceId of the newly created EC2 instance",
-                Value=Ref(ec2_instance),
-            ),
-        ])
+        template.add_output([Output("InstanceId",
+            Description = "InstanceId of the newly created EC2 instance",
+            Value       = Ref(ec2_instance),
+        )])
 
         print(template.to_json())
 
-t = Troposphere()
-t.write()
+Ec2Instance().write()
