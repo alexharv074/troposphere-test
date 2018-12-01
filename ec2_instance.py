@@ -7,32 +7,34 @@ import json
 import os
 
 class Jerakia:
-    def __init__(self):
-        pass
-
     def lookup(self, key):
         os.environ["JERAKIA_CONFIG"] = "./jerakia.yaml"
         command = "bundle exec jerakia lookup %s --output json" % key
         json_string = check_output(command, shell=True)
         return json.loads(json_string)
 
-class Ec2Instance:
-    def __init__(self):
-        jerakia = Jerakia()
-        self.Mapping      = jerakia.lookup("Mapping")
-        self.InstanceType = jerakia.lookup("InstanceType")
+class TropBase:
+    jerakia = Jerakia()
 
     def write(self):
-        template = Template()
+        self.template = Template()
+        self.build()
+        print(self.template.to_json())
 
-        keyname_param = template.add_parameter(Parameter("KeyName",
+class Ec2Instance(TropBase):
+    def __init__(self):
+        self.Mapping      = self.jerakia.lookup("Mapping")
+        self.InstanceType = self.jerakia.lookup("InstanceType")
+
+    def build(self):
+        keyname_param = self.template.add_parameter(Parameter("KeyName",
             Description = "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             Type        = "String",
         ))
 
-        template.add_mapping("RegionMap", self.Mapping)
+        self.template.add_mapping("RegionMap", self.Mapping)
 
-        ec2_instance = template.add_resource(ec2.Instance("Ec2Instance",
+        ec2_instance = self.template.add_resource(ec2.Instance("Ec2Instance",
             ImageId        = FindInMap("RegionMap", Ref("AWS::Region"), "AMI"),
             InstanceType   = self.InstanceType,
             KeyName        = Ref(keyname_param),
@@ -40,11 +42,9 @@ class Ec2Instance:
             UserData       = Base64("80"),
         ))
 
-        template.add_output([Output("InstanceId",
+        self.template.add_output([Output("InstanceId",
             Description = "InstanceId of the newly created EC2 instance",
             Value       = Ref(ec2_instance),
         )])
-
-        print(template.to_json())
 
 Ec2Instance().write()
