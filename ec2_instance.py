@@ -15,15 +15,21 @@ class Jerakia:
 
 class TropBase:
     jerakia = Jerakia()
+    template = Template()
 
     def write(self):
-        self.template = Template()
         self.build()
         print(self.template.to_json())
 
+class Mapping(TropBase):
+    def __init__(self):
+        self.Mapping = self.jerakia.lookup("Mapping")
+
+    def build(self):
+        self.template.add_mapping("RegionMap", self.Mapping)
+
 class Ec2Instance(TropBase):
     def __init__(self):
-        self.Mapping      = self.jerakia.lookup("Mapping")
         self.InstanceType = self.jerakia.lookup("InstanceType")
 
     def build(self):
@@ -31,8 +37,6 @@ class Ec2Instance(TropBase):
             Description = "Name of an existing EC2 KeyPair to enable SSH access to the instance",
             Type        = "String",
         ))
-
-        self.template.add_mapping("RegionMap", self.Mapping)
 
         ec2_instance = self.template.add_resource(ec2.Instance("Ec2Instance",
             ImageId        = FindInMap("RegionMap", Ref("AWS::Region"), "AMI"),
@@ -47,4 +51,9 @@ class Ec2Instance(TropBase):
             Value       = Ref(ec2_instance),
         )])
 
-Ec2Instance().write()
+class Stack(TropBase):
+    def build(self):
+        Mapping().build()
+        Ec2Instance().build()
+
+Stack().write()
